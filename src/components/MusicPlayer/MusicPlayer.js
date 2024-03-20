@@ -149,50 +149,66 @@ const MusicPlayer = () => {
     context.textAlign = 'left';
     context.textBaseline = 'top';
 
-    if (Array.isArray(lyrics)) {
-        const lineHeight = 25;
-        let y = 10;
-        let currentIndex = 0;
+    let animationFrameId;
+    
+    const renderLyrics = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-        for (let i = 0; i < lyrics.length; i++) {
-            if (audio.currentTime >= parseFloat(lyrics[i].lyricsParam[0].timeChart)) {
-                currentIndex = i;
+        if (Array.isArray(lyrics)) {
+            const lineHeight = 25;
+            let y = 10;
+            let currentIndex = 0;
+
+            for (let i = 0; i < lyrics.length; i++) {
+                if (audio.currentTime >= parseFloat(lyrics[i].lyricsParam[0].timeChart)) {
+                    currentIndex = i;
+                }
             }
-        }
 
-        const startLineIndex = Math.max(0, currentIndex - 1);
+            const startLineIndex = Math.max(0, currentIndex - 1);
 
-        for (let i = startLineIndex; i < startLineIndex + 2; i++) {
-            let x = 10;
-            let lineText = '';
-            let lineFinished = true;
+            for (let i = startLineIndex; i < startLineIndex + 2; i++) {
+                let x = 10;
+                let lineText = '';
+                let lineFinished = true;
 
-            for (let j = 0; j < lyrics[i].lyricsParam.length; j++) {
-                const char = lyrics[i].lyricsParam[j];
-                let charColor = 'gray';
+                for (let j = 0; j < lyrics[i].lyricsParam.length; j++) {
+                    const char = lyrics[i].lyricsParam[j];
+                    let charColor = 'gray';
 
-                if (audio.currentTime >= parseFloat(char.timeChart)) {
-                    const nextTime = parseFloat(lyrics[i].lyricsParam[j + 1]?.timeChart);
-                    const progress = nextTime ? (audio.currentTime - parseFloat(char.timeChart)) / (nextTime - parseFloat(char.timeChart)) : 1;
-                    const red = Math.floor(255 * progress);
-                    charColor = `rgb(${red}, 0, 0)`;
+                    if (audio.currentTime >= parseFloat(char.timeChart)) {
+                        const nextTime = parseFloat(lyrics[i].lyricsParam[j + 1]?.timeChart);
+                        const progress = nextTime ? (audio.currentTime - parseFloat(char.timeChart)) / (nextTime - parseFloat(char.timeChart)) : 1;
+                        const red = Math.floor(255 * progress);
+                        charColor = `rgb(${red}, 0, 0)`;
+                    }
+
+                    context.fillStyle = charColor;
+                    lineText += char.chartLyric;
+                    context.fillText(char.chartLyric, x, y);
+                    x += context.measureText(char.chartLyric).width;
                 }
 
-                context.fillStyle = charColor;
-                lineText += char.chartLyric;
-                context.fillText(char.chartLyric, x, y);
-                x += context.measureText(char.chartLyric).width;
-            }
+                if (lineFinished && i !== currentIndex) {
+                    context.fillStyle = 'gray';
+                    context.fillText(lineText, 10, y);
+                }
 
-            if (lineFinished && i !== currentIndex) {
-                context.fillStyle = 'gray';
-                context.fillText(lineText, 10, y);
+                y += lineHeight;
             }
-
-            y += lineHeight;
         }
-    }
-}, [audio.currentTime, lyrics]);
+
+        animationFrameId = requestAnimationFrame(renderLyrics);
+    };
+
+    renderLyrics();
+
+    return () => {
+        cancelAnimationFrame(animationFrameId);
+    };
+}, [audio.currentTime, lyrics, canvasRef]);
+
+
   
 
 const formatDuration = (value) => {
