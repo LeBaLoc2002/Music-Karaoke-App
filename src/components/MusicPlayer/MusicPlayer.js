@@ -168,9 +168,9 @@ const MusicPlayer = () => {
           const char = lyrics[i].lyricsParam[j];
           if (audio.currentTime >= parseFloat(char.timeChart)) {
             if (i === currentIndex) {
-              context.fillStyle = 'black';
+              context.fillStyle = 'red';
             } else {
-              context.fillStyle = 'gray';
+              context.fillStyle = 'black';
             }
             context.fillText(char.chartLyric, x, y);
             x += context.measureText(char.chartLyric).width;
