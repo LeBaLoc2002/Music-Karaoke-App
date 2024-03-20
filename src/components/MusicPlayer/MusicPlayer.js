@@ -145,7 +145,7 @@ const MusicPlayer = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.font = 'bold 14px Arial';
+    context.font = 'bold 13px Arial';
     context.textAlign = 'left';
     context.textBaseline = 'top';
 
