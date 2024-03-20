@@ -117,93 +117,104 @@ const MusicPlayer = () => {
         console.error('Error fetching music lyrics:', error);
       }
     };
-
+  
     fetchMusicLyrics();
-
+  
     const handleLoadedMetadata = () => {
       setDuration(audio.duration);
     };
-
+  
     const handleTimeUpdate = () => {
       setPosition(audio.currentTime);
       if (audio.ended) {
         setPaused(true);
       }
     };
-
+  
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
-
+  
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
     };
   }, [audio]);
+  
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.font = '14px Arial';
+    context.font = 'bold 14px Arial';
     context.textAlign = 'left';
     context.textBaseline = 'top';
-  
+
     if (Array.isArray(lyrics)) {
-      const lineHeight = 25;
-      let y = 10;
-      let currentIndex = 0;
-  
-      for (let i = 0; i < lyrics.length; i++) {
-        if (audio.currentTime >= parseFloat(lyrics[i].lyricsParam[0].timeChart)) {
-          currentIndex = i;
-        }
-      }
-  
-      const startLineIndex = Math.max(0, currentIndex - 1); 
-      const endLineIndex = Math.min(lyrics.length, startLineIndex + 3); 
-  
-      for (let i = startLineIndex; i < endLineIndex; i++) {
-        let x = 10;
-        for (let j = 0; j < lyrics[i].lyricsParam.length; j++) {
-          const char = lyrics[i].lyricsParam[j];
-          if (audio.currentTime >= parseFloat(char.timeChart)) {
-            if (i === currentIndex) {
-              context.fillStyle = 'red';
-            } else {
-              context.fillStyle = 'black';
+        const lineHeight = 25;
+        let y = 10;
+        let currentIndex = 0;
+
+        for (let i = 0; i < lyrics.length; i++) {
+            if (audio.currentTime >= parseFloat(lyrics[i].lyricsParam[0].timeChart)) {
+                currentIndex = i;
             }
-            context.fillText(char.chartLyric, x, y);
-            x += context.measureText(char.chartLyric).width;
-          } else {
-            break;
-          }
         }
-        y += lineHeight;
-      }
+
+        const startLineIndex = Math.max(0, currentIndex - 1);
+
+        for (let i = startLineIndex; i < startLineIndex + 2; i++) {
+            let x = 10;
+            let lineText = '';
+            let lineFinished = true;
+
+            for (let j = 0; j < lyrics[i].lyricsParam.length; j++) {
+                const char = lyrics[i].lyricsParam[j];
+                let charColor = 'gray';
+
+                if (audio.currentTime >= parseFloat(char.timeChart)) {
+                    const nextTime = parseFloat(lyrics[i].lyricsParam[j + 1]?.timeChart);
+                    const progress = nextTime ? (audio.currentTime - parseFloat(char.timeChart)) / (nextTime - parseFloat(char.timeChart)) : 1;
+                    const red = Math.floor(255 * progress);
+                    charColor = `rgb(${red}, 0, 0)`;
+                }
+
+                context.fillStyle = charColor;
+                lineText += char.chartLyric;
+                context.fillText(char.chartLyric, x, y);
+                x += context.measureText(char.chartLyric).width;
+            }
+
+            if (lineFinished && i !== currentIndex) {
+                context.fillStyle = 'gray';
+                context.fillText(lineText, 10, y);
+            }
+
+            y += lineHeight;
+        }
     }
-  }, [audio.currentTime, lyrics]);
+}, [audio.currentTime, lyrics]);
   
 
-  const formatDuration = (value) => {
-    const minute = Math.floor(value / 60);
-    const secondLeft = Math.floor(value % 60);
-    return `${minute}:${secondLeft < 10 ? `0${secondLeft}` : secondLeft}`;
-  };
+const formatDuration = (value) => {
+  const minute = Math.floor(value / 60);
+  const secondLeft = Math.floor(value % 60);
+  return `${minute}:${secondLeft < 10 ? `0${secondLeft}` : secondLeft}`;
+};
 
-  const handlePlayPause = () => {
-    if (paused) {
+const handlePlayPause = () => {
+  if (paused) {
       audio.play();
-    } else {
+  } 
+  else {
       audio.pause();
-    }
-    setPaused(!paused);
-  };
+  }
+  setPaused(!paused);
+};
 
-  const handleSeek = (_, value) => {
-    audio.currentTime = value;
-    setPosition(value);
-  };
-
+const handleSeek = (_, value) => {
+  audio.currentTime = value;
+  setPosition(value);
+};
   return (
     <Box sx={{ width: '100%', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <Widget>
@@ -326,7 +337,7 @@ const MusicPlayer = () => {
           />
           <VolumeUpRounded htmlColor={lightIconColor} />
         </Stack>
-        <canvas ref={canvasRef} width={600} height={200} />
+        <canvas ref={canvasRef} width={700} height={200} />
       </Widget>
       <WallPaper />
     </Box>
